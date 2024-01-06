@@ -19,41 +19,30 @@
 # Sumbitted To:
 # Sir Nauman
 
+# To install All The packages just type
 
-
-
-
-# To install All The packages just type 
-
-# "pip install -r requirements.txt" 
+# "pip install -r requirements.txt"
 
 # in the terminal of vscode or whichever IDE you are Using
 
 import tkinter as tk
 import re
-from flask import Flask, request, jsonify
-from flask_pymongo import PyMongo
-from bson import ObjectId
-
-app = Flask(__name__)
-app.config['MONGO_URI'] = 'mongodb://localhost:27017/sos_manager'
-mongo = PyMongo(app)
+import requests
 
 
 class SOSManager:
     def __init__(self):
-        # Initialize MongoDB
-        self.db = mongo.db
-        self.sos_collection = self.db.sos_collection
-
-        # Initialize Tkinter
         self.root = tk.Tk()
         self.root.title("Scheme Of Study Manager")
 
-        # Initialize semesters attribute
         self.semesters = {}
 
-        # Tkinter GUI components
+        tk.Label(self.root, text="Teacher Name:").grid(row=0, column=0, sticky=tk.E)
+        tk.Label(self.root, text="Subject:").grid(row=1, column=0, sticky=tk.E)
+        tk.Label(self.root, text="Description:").grid(row=2, column=0, sticky=tk.E)
+        tk.Label(self.root, text="Course Code:").grid(row=3, column=0, sticky=tk.E)
+        tk.Label(self.root, text="Semester:").grid(row=4, column=0, sticky=tk.E)
+
         self.subject_entry = tk.Entry(self.root, width=100)
         self.course_code_entry = tk.Entry(self.root, width=100)
         self.teacher_name_entry = tk.Entry(self.root, width=100)
@@ -62,7 +51,6 @@ class SOSManager:
         self.selected_semester = tk.StringVar(self.root)
         self.semester_listbox = tk.OptionMenu(self.root, self.selected_semester, *self.get_semester_options())
 
-        # Tkinter buttons
         add_button = tk.Button(self.root, text="Add", command=self.add_item)
         remove_button = tk.Button(self.root, text="Remove", command=self.remove_item)
         edit_button = tk.Button(self.root, text="Edit", command=self.edit_item)
@@ -70,7 +58,6 @@ class SOSManager:
         sort_button = tk.Button(self.root, text="Sort", command=self.sort_items)
         load_button = tk.Button(self.root, text="Load Subjects", command=self.load_subjects)
 
-        # Tkinter menu
         menubar = tk.Menu(self.root)
         self.root.config(menu=menubar)
 
@@ -80,47 +67,22 @@ class SOSManager:
         teacher_menu.add_command(label="Sir Rafaqat Kazmi", command=lambda: self.select_teacher(2))
         teacher_menu.add_command(label="Ma'am Sunnia", command=lambda: self.select_teacher(3))
 
-        # Tkinter grid layout
-        self.subject_entry.grid(row=0, column=1, columnspan=3)
-        self.course_code_entry.grid(row=1, column=1, columnspan=3)
-        self.teacher_name_entry.grid(row=2, column=1, columnspan=3)
-        self.description_entry.grid(row=3, column=1, columnspan=3)
-        add_button.grid(row=4, column=0)
-        remove_button.grid(row=4, column=1)
-        edit_button.grid(row=4, column=2)
-        save_button.grid(row=4, column=3)
-        sort_button.grid(row=4, column=4)
-        self.sos_listbox.grid(row=5, column=0, columnspan=5)
-        self.semester_listbox.grid(row=6, column=1, columnspan=2)
-        load_button.grid(row=6, column=3, columnspan=2)
+        self.subject_entry.grid(row=1, column=1, columnspan=3)
+        self.course_code_entry.grid(row=3, column=1, columnspan=3)
+        self.teacher_name_entry.grid(row=0, column=1, columnspan=3)
+        self.description_entry.grid(row=2, column=1, columnspan=3)
+        self.semester_listbox.grid(row=4, column=1, columnspan=2) 
 
-        # Tkinter event bindings
+        add_button.grid(row=5, column=0)
+        remove_button.grid(row=5, column=1)
+        edit_button.grid(row=5, column=2)
+        save_button.grid(row=5, column=3)
+        sort_button.grid(row=5, column=4)
+        self.sos_listbox.grid(row=6, column=0, columnspan=5)
+        load_button.grid(row=6, column=3, columnspan=2)  
+
         self.sos_listbox.bind("<Double-Button-1>", self.edit_item)
 
-        # Flask routes
-        @app.route('/sos', methods=['GET'])
-        def get_sos():
-            sos_items = self.get_sos_from_mongo()
-            return jsonify(sos_items)
-
-        @app.route('/sos', methods=['POST'])
-        def add_sos():
-            data = request.json
-            self.add_sos_to_mongo(data)
-            return jsonify({"message": "SOS item added successfully"})
-
-        @app.route('/sos/<item_id>', methods=['PUT'])
-        def update_sos(item_id):
-            data = request.json
-            self.update_sos_in_mongo(item_id, data)
-            return jsonify({"message": "SOS item updated successfully"})
-
-        @app.route('/sos/<item_id>', methods=['DELETE'])
-        def delete_sos(item_id):
-            self.delete_sos_from_mongo(item_id)
-            return jsonify({"message": "SOS item deleted successfully"})
-
-        # Run the Tkinter and Flask application
         self.root.mainloop()
 
     def get_semester_options(self):
@@ -136,20 +98,54 @@ class SOSManager:
             selected_semester = self.selected_semester.get()
             if selected_semester:
                 course_info = f"{subject_name}: {description} ({course_code}, {teacher_name})"
-                self.semesters.setdefault(selected_semester, []).append(course_info)
-                self.update_sos_listbox()
-                self.save_sos()
 
-            self.subject_entry.delete(0, tk.END)
-            self.description_entry.delete(0, tk.END)
-            self.course_code_entry.delete(0, tk.END)
-            self.teacher_name_entry.delete(0, tk.END)
+                data = {
+                    'subject_name': subject_name,
+                    'description': description,
+                    'course_code': course_code,
+                    'teacher_name': teacher_name,
+                    'selected_semester': selected_semester
+                }
+                response = requests.post('http://127.0.0.1:5000/sos', json=data)
+
+                if response.status_code == 201:
+                    self.update_sos_listbox()
+                else:
+                    print(f"Error adding item: {response.json().get('error')}")
+
+                self.save_sos()  
+
+            self.clear_entry_fields()
 
     def remove_item(self):
         selected_item = self.sos_listbox.get(tk.ANCHOR)
         if selected_item:
             self.sos_listbox.delete(tk.ANCHOR)
-            self.save_sos()
+
+            response = requests.delete('http://127.0.0.1:5000/sos',
+                                       params={'selected_semester': self.selected_semester.get(),
+                                               'selected_item': selected_item})
+
+            if response.status_code != 200:
+                print(f"Error removing item: {response.json().get('error')}")
+
+    def load_subjects(self):
+        selected_semester = self.selected_semester.get()
+        if selected_semester:
+            response = requests.get('http://127.0.0.1:5000/sos', params={'selected_semester': selected_semester})
+
+            if response.status_code == 200:
+                self.sos_listbox.delete(0, tk.END)  
+                for course in response.json().get('courses', []):
+                    self.sos_listbox.insert(tk.END, course)
+            else:
+                print(f"Error loading items: {response.json().get('error')}")
+
+    def clear_entry_fields(self):
+        self.subject_entry.delete(0, tk.END)
+        self.description_entry.delete(0, tk.END)
+        self.course_code_entry.delete(0, tk.END)
+        self.teacher_name_entry.delete(0, tk.END)
 
     def edit_item(self):
         selected_item = self.sos_listbox.get(tk.ANCHOR)
@@ -182,14 +178,6 @@ class SOSManager:
         self.sos_listbox.delete(0, tk.END)
         selected_semester = self.selected_semester.get()
         if selected_semester:
-            courses = self.semesters.get(selected_semester, [])
-            for course in courses:
-                self.sos_listbox.insert(tk.END, course)
-
-    def load_subjects(self):
-        selected_semester = self.selected_semester.get()
-        if selected_semester:
-            self.sos_listbox.delete(0, tk.END)
             courses = self.semesters.get(selected_semester, [])
             for course in courses:
                 self.sos_listbox.insert(tk.END, course)
