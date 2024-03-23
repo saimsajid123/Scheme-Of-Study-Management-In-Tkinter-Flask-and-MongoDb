@@ -1,24 +1,3 @@
-# Sumbitted by:
-# Muhammad Saim Sajid
-# Rollno:
-# F21BSEEN1E02025
-# Semester:
-# 5th
-# Section:
-# E1
-# Sumbitted by:
-# Huzaifa Qureshi
-# Rollno:
-# F21BSEEN1E02022
-# Semester:
-# 5th
-# Section:
-# E1
-# Project:
-# Scheme of Study Management In Tkinter
-# Sumbitted To:
-# Sir Nauman
-
 # To install All The packages just type
 
 # "pip install -r requirements.txt"
